@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copier les infos</title>
+<style>
+  :root{
+    --bg:#f3f5f2; --card:#ffffff; --ink:#1d2a24; --muted:#66756d;
+    --line:#dbe2dd; --accent:#1f6f54; --ok:#0d8a4f; --hover:#e8f3ed;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#141a17;--card:#1c2421;--ink:#e6eee9;--muted:#8fa197;--line:#2c3733;--accent:#4cc39a;--ok:#4cc39a;--hover:#22302a;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:5rem}
+  nav{position:sticky;top:0;z-index:5;display:flex;gap:.5rem;flex-wrap:wrap;padding:.7rem 1rem;background:var(--bg);border-bottom:1px solid var(--line)}
+  nav a{color:var(--ink);text-decoration:none;padding:.35rem .8rem;border:1px solid var(--line);border-radius:999px;font-size:.9rem;background:var(--card)}
+  nav a:hover,nav a:focus-visible{border-color:var(--accent);outline:none}
+  main{max-width:720px;margin:0 auto;padding:0 1rem}
+  h2{font-size:1.15rem;margin:2rem 0 .6rem}
+  .list{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:1rem;width:100%;padding:.7rem 1rem;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+  .row:last-child{border-bottom:0}
+  .row:hover,.row:focus-visible{background:var(--hover);outline:none}
+  .row .l{color:var(--muted);font-size:.85rem;flex:0 1 45%}
+  .row .v{font-weight:600;flex:1 1 auto;text-align:right;word-break:break-word}
+  .row.done .v{color:var(--ok)}
+  .row.done .v::after{content:" ✓"}
+  #toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:.6rem 1rem;border-radius:8px;opacity:0;pointer-events:none;transition:.2s;max-width:90%}
+  #toast.on{opacity:1;transform:translateX(-50%)}
+  @media (prefers-reduced-motion:reduce){#toast{transition:none}}
+  p.hint{color:var(--muted);font-size:.9rem;margin:1rem 0 0}
+</style>
+</head>
+<body>
+<nav id="nav"></nav>
+<main>
+  <p class="hint">Clique sur une ligne pour copier sa valeur.</p>
+  <div id="app"></div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const DATA = [
+  { titre: "Personne 1", lignes: [
+    ["Nom","Sanogo"],
+    ["Prénoms","Aicha Noura"],
+    ["Date de naissance","27-06-1985"],
+    ["Lieu de naissance","Bingerville"],
+    ["Sexe","F"],
+    ["Résidence","San-Pédro"],
+    ["Profession","Ménagère"],
+    ["N° Passeport","24AV55458"],
+    ["Niveau français","Collège"],
+    ["Niveau arabe","Néant"],
+    ["Contact 1","0707219863"],
+    ["Contact 2","0708030539"],
+    ["Ancien pèlerin","Non"],
+    ["Nom du père","Seydou"],
+    ["Prénom du père","Sanogo"],
+    ["Date de naissance du père","01-01-1936"],
+    ["Lieu de naissance du père","Bassam"],
+    ["Nom de la mère","Salimata"],
+    ["Prénom de la mère","Coulibaly"],
+    ["Date de naissance de la mère","01-01-1948"],
+    ["Lieu de naissance de la mère","Bassam"],
+    ["Contact 1 — Nom","Cissé"],
+    ["Contact 1 — Prénom","Daouda"],
+    ["Contact 1 — Téléphone","0505611985"],
+    ["Contact 1 — Domicile","Abidjan"],
+    ["Contact 2 — Nom","Mariam"],
+    ["Contact 2 — Prénom","Koné"],
+    ["Contact 2 — Téléphone","0101578031"],
+    ["Contact 2 — Domicile","Anyama"]
+  ]},
+  { titre: "Remplaçant (Personne 1)", lignes: [
+    ["Nom","Koulibaly"],
+    ["Prénom","Salimata"],
+    ["N° Passeport","24AV55558"],
+    ["Date de délivrance","27-01-2025"],
+    ["Date d'expiration","26-01-2030"],
+    ["Contact","0707219863"]
+  ]},
+  { titre: "Personne 2", lignes: [
+    ["Nom","Mamadou"],
+    ["Prénoms","Traoré"],
+    ["Date de naissance","13-11-1964"],
+    ["Lieu de naissance","Rubino"],
+    ["Sexe","M"],
+    ["Résidence","Adzopé"],
+    ["Profession","Transporteur"],
+    ["N° Passeport","25AD87875"],
+    ["Niveau français","Néant"],
+    ["Niveau arabe","Néant"],
+    ["Contact 1","0707707358"],
+    ["Contact 2","0707913308"],
+    ["Ancien pèlerin","Non"],
+    ["Nom du père","Brama"],
+    ["Prénom du père","Traoré"],
+    ["Date de naissance du père","01-01-1935"],
+    ["Lieu de naissance du père","Rubino"],
+    ["Nom de la mère","Traoré"],
+    ["Prénom de la mère","Assita"],
+    ["Date de naissance de la mère","01-01-1935"],
+    ["Lieu de naissance de la mère","Agboville"],
+    ["Contact 1 — Nom","Traoré"],
+    ["Contact 1 — Prénom","Souleymane"],
+    ["Contact 1 — Téléphone","0707707358"],
+    ["Contact 1 — Domicile","Anyama"],
+    ["Contact 2 — Nom","Mariam"],
+    ["Contact 2 — Prénom","Koné"],
+    ["Contact 2 — Téléphone","0709459445"],
+    ["Contact 2 — Domicile","Anyama"]
+  ]},
+  { titre: "Remplaçant (Personne 2)", lignes: [
+    ["Nom","Lancina"],
+    ["Prénom","Karamoko"],
+    ["N° Passeport","24AX15634"],
+    ["Date de délivrance","24-04-2025"],
+    ["Date d'expiration","23-04-2030"],
+    ["Contact","0709553830"]
+  ]}
+];
+
+const app = document.getElementById("app");
+const nav = document.getElementById("nav");
+const toast = document.getElementById("toast");
+let timer;
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+
+DATA.forEach((bloc, i) => {
+  nav.insertAdjacentHTML("beforeend", `<a href="#b${i}">${esc(bloc.titre)}</a>`);
+  app.insertAdjacentHTML("beforeend",
+    `<h2 id="b${i}">${esc(bloc.titre)}</h2><div class="list">` +
+    bloc.lignes.map(([l, v]) =>
+      `<button class="row" data-v="${esc(v)}"><span class="l">${esc(l)}</span><span class="v">${esc(v)}</span></button>`
+    ).join("") + `</div>`);
+});
+
+function copier(texte){
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(texte);
+  return new Promise((ok) => {
+    const t = document.createElement("textarea");
+    t.value = texte; t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select(); document.execCommand("copy");
+    t.remove(); ok();
+  });
+}
+
+app.addEventListener("click", async (e) => {
+  const row = e.target.closest(".row");
+  if (!row) return;
+  const v = row.dataset.v;
+  await copier(v);
+  row.classList.add("done");
+  toast.textContent = "Copié : " + v;
+  toast.classList.add("on");
+  clearTimeout(timer);
+  timer = setTimeout(() => toast.classList.remove("on"), 1200);
+});
+</script>
+</body>
+</html>
